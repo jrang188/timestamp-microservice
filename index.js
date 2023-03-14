@@ -5,6 +5,7 @@
 const express = require('express');
 const app = express();
 const PORT = 18888;
+let invalid = false;
 
 // enable CORS (https://en.wikipedia.org/wiki/Cross-origin_resource_sharing)
 // so that your API is remotely testable by FCC
@@ -25,18 +26,30 @@ app.get('/api/hello', function (req, res) {
 });
 
 app.get('/api/:date?', (req, res) => {
-  console.log(req.params.date);
-  const date = req.params.date;
+  let date = new Date(req.params.date);
+  let result = {};
 
-  if(date.includes('-')){
-    res.json({ unix: new Date(date).getTime(), utc: new Date(date).toUTCString() });
-  } else if(Number.isInteger(date)){
-    res.json({ unix: new Date(parseInt(date)).getTime(), utc: new Date(parseInt(date)).toUTCString() });
-  } else if (date === "") {
-    res.json({ unix: new Date().getTime(), utc: new Date().toUTCString() });
-  } else {
-    res.json({ error: 'Invalid Date' });
+  if(req.params.date === undefined){
+    date = new Date();
+  } else if(date.toString() === "Invalid Date"){
+    date = new Date(Number.parseInt(req.params.date));
+    if(date.toString() === "Invalid Date"){
+      result = {error: "Invalid Date"};
+      invalid = true;
+    }
   }
+  
+  if(!invalid){
+    result = {
+      unix: date.getTime(),
+      utc: date.toUTCString()
+    }
+  } else {
+    invalid = false;
+  }
+  
+  res.json(result);
+    
 });
 
 // listen for requests :)
